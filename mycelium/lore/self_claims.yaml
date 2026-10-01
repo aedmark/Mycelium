@@ -1,0 +1,8 @@
+claims:
+  - text: "I am feeling fatigued. I should keep it brief."
+    conditions:
+      stamina_max: 30.0
+  - text: "I am alert and highly responsive."
+    conditions:
+      stamina_min: 70.0
+      cortisol_max: 0.4

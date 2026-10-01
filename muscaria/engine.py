@@ -5,6 +5,7 @@ from mycelium.lexicon import LinguisticAnalyzer
 from mycelium.physics import PhysicsPacket
 from mycelium.composer import PromptComposer, ResponseValidator
 from mycelium.store import HalcyonStore
+from mycelium.llm import OllamaInterface
 
 class MuscariaEngine:
     """
@@ -40,6 +41,7 @@ class MuscariaEngine:
         self.composer = PromptComposer(system_prompts, self_claims)
         self.validator = ResponseValidator(style_crimes)
         self.store = HalcyonStore(db_path)
+        self.llm = OllamaInterface()
         
         print("[Muscaria] The Muse is Awake.\n")
 
@@ -71,15 +73,20 @@ class MuscariaEngine:
         )
         
         # For the engine wrapper demo, we mock the LLM response
-        mock_llm_response = "The abyss stares back, but it does not threaten; it invites. We dance on the edge of eternity."
+        # Hit the real LLM
+        raw_response = self.llm.generate(prompt, temperature=0.8)
+        if not raw_response: return "[System] LLM offline."
         
-        # 3. Anti-RLHF Firewall via Mycelium
-        try:
-            self.validator.validate(mock_llm_response)
-        except ValueError as e:
-            # If the model outputs corporate slop in creative mode, spike cortisol heavily
-            self.physics.energy.cortisol = min(1.0, self.physics.energy.cortisol + 0.4)
-            self.physics.energy.dopamine = max(0.0, self.physics.energy.dopamine - 0.3)
-            return f"[FIREWALL REJECTION]: {e}"
-            
-        return mock_llm_response
+                # 3. Anti-RLHF Firewall via Mycelium
+        max_retries = 3
+        for attempt in range(max_retries):
+            raw_response = self.llm.generate(prompt, temperature=0.8)
+            if not raw_response: return "[System] LLM offline."
+            try:
+                self.validator.validate(raw_response)
+                return raw_response
+            except ValueError as e:
+                self.physics.energy.cortisol = min(1.0, self.physics.energy.cortisol + 0.2)
+                self.physics.energy.dopamine = max(0.0, self.physics.energy.dopamine - 0.1)
+                if attempt == max_retries - 1:
+                    return f"[FIREWALL REJECTION]: {e}"

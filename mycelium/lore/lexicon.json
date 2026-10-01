@@ -1,0 +1,20 @@
+{
+    "VOCAB": {
+        "heavy": ["sorrow", "burden", "weight", "complex", "intricate"],
+        "kinetic": ["move", "fast", "quick", "flow", "rush"],
+        "solvents": ["the", "a", "and", "to", "of", "in", "is", "it"]
+    },
+    "LINGUISTICS": {
+        "PHONETICS": {
+            "PLOSIVE": ["p", "t", "k", "b", "d", "g"],
+            "LIQUID": ["l", "r"],
+            "VOWELS": ["a", "e", "i", "o", "u"]
+        },
+        "ROOTS": {"heavy": ["grav", "pond"]},
+        "BIASES": {"heavy": 1.0, "kinetic": 1.0},
+        "DIMENSION_MAP": {
+            "heavy": {"narrative_drag": 1.0, "tension": 0.5},
+            "kinetic": {"flow": 1.0, "tension": -0.1}
+        }
+    }
+}

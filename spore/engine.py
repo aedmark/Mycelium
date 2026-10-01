@@ -5,6 +5,7 @@ from mycelium.lexicon import LinguisticAnalyzer
 from mycelium.physics import PhysicsPacket
 from mycelium.composer import PromptComposer, ResponseValidator
 from mycelium.store import HalcyonStore
+from mycelium.llm import OllamaInterface
 
 class SporeEngine:
     """
@@ -40,10 +41,11 @@ class SporeEngine:
         self.composer = PromptComposer(system_prompts, self_claims)
         self.validator = ResponseValidator(style_crimes)
         self.store = HalcyonStore(db_path)
+        self.llm = OllamaInterface()
         
         print("[Spore] Kernel Active. Ready for input.\n")
 
-    def process_input(self, text: str, mock_llm_response: str) -> str:
+    def process_input(self, text: str) -> str:
         # 1. Biological Processing via Mycelium
         vector = self.lexicon.vectorize(text)
         self.physics.apply_vector(vector)
@@ -65,23 +67,14 @@ class SporeEngine:
             template_key="TECHNICAL"
         )
         
-        # 3. Anti-RLHF Firewall via Mycelium
+                # 3. Anti-RLHF Firewall via Mycelium
         max_retries = 3
-        attempts = 0
-        
-        while attempts < max_retries:
-            attempts += 1
+        for attempt in range(max_retries):
+            raw_response = self.llm.generate(prompt, temperature=0.1)
+            if not raw_response: return "[System] LLM offline."
             try:
-                # In a real loop, we generate from the LLM here. We use the mock.
-                # If it passes, we break and return.
-                self.validator.validate(mock_llm_response)
-                return mock_llm_response
+                self.validator.validate(raw_response)
+                return raw_response
             except ValueError as e:
-                print(f"[Spore] Attempt {attempts}/{max_retries} Failed: {e}. Retrying...")
-                # We just reject and try again (mocking a "better" response on retry)
-                if attempts < max_retries:
-                    mock_llm_response = "def optimized_function():\n    return True"
-                else:
-                    return f"[FIREWALL REJECTION]: Maximum retries exceeded. Final error: {e}"
-            
-        return mock_llm_response
+                if attempt == max_retries - 1:
+                    return f"[FIREWALL REJECTION]: {e}"

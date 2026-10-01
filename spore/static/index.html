@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Spore | Kernel Mode</title>
+    <style>
+        body { background: #00111a; color: #00ffff; font-family: 'Consolas', monospace; display: flex; height: 100vh; margin:0; padding:20px; box-sizing: border-box; gap: 20px;}
+        .vitals { width: 250px; border: 2px solid #00ffff; padding: 15px; background: rgba(0, 17, 26, 0.9); box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);}
+        .chat { flex-grow: 1; border: 2px solid #00ffff; padding: 15px; display: flex; flex-direction: column; background: rgba(0, 17, 26, 0.9); box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);}
+        #output { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; white-space: pre-wrap; font-size: 14px;}
+        input { background: #000; border: 1px solid #00ffff; color: #ff9900; padding: 12px; width: 100%; box-sizing: border-box; font-family: inherit; font-size: 14px; outline: none;}
+        .bar { height: 8px; background: #003333; margin: 5px 0 20px 0; border: 1px solid #00ffff;}
+        .fill { height: 100%; transition: width 0.3s; }
+        h3 { color: #ff9900; letter-spacing: 2px; text-transform: uppercase; border-bottom: 2px dashed #00ffff; padding-bottom: 10px;}
+        .prompt { color: #ff9900; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="vitals">
+        <h3>[KERNEL]</h3>
+        ATP <span id="v-stam" style="float:right">100</span><div class="bar"><div id="b-stam" class="fill" style="width:100%; background:#00ffff;"></div></div>
+        DOP <span id="v-dopa" style="float:right">0.1</span><div class="bar"><div id="b-dopa" class="fill" style="width:10%; background:#00ffff;"></div></div>
+        COR <span id="v-cort" style="float:right">0.1</span><div class="bar"><div id="b-cort" class="fill" style="width:10%; background:#ff3333;"></div></div>
+        DRG <span id="v-drag" style="float:right">0.6</span>
+    </div>
+    <div class="chat">
+        <div id="output">Spore kernel initialized. Awaiting commands...</div>
+        <div style="display: flex; align-items: center; border-top: 1px dashed #00ffff; padding-top: 10px;">
+            <span class="prompt">root@spore:~$&nbsp;</span>
+            <input type="text" id="inp" autofocus autocomplete="off" spellcheck="false">
+        </div>
+    </div>
+    <script>
+        const inp = document.getElementById('inp');
+        const out = document.getElementById('output');
+        inp.addEventListener('keypress', async (e) => {
+            if(e.key === 'Enter' && inp.value) {
+                const text = inp.value; inp.value = '';
+                out.innerHTML += `\n\n<span style="color:#ff9900;">root@spore:~$ ${text}</span>`;
+                out.scrollTop = out.scrollHeight;
+                const res = await fetch('/api/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:text})});
+                const data = await res.json();
+                out.innerHTML += `\n\n${data.response}`;
+                out.scrollTop = out.scrollHeight;
+                document.getElementById('v-stam').innerText = data.vitals.stamina.toFixed(1);
+                document.getElementById('b-stam').style.width = Math.min(100, data.vitals.stamina) + '%';
+                document.getElementById('v-dopa').innerText = data.vitals.dopamine.toFixed(2);
+                document.getElementById('b-dopa').style.width = (data.vitals.dopamine*100) + '%';
+                document.getElementById('v-cort').innerText = data.vitals.cortisol.toFixed(2);
+                document.getElementById('b-cort').style.width = (data.vitals.cortisol*100) + '%';
+                document.getElementById('v-drag').innerText = data.vitals.drag.toFixed(2);
+            }
+        });
+    </script>
+</body>
+</html>

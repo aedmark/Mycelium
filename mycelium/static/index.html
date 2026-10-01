@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mycelium | Core Chat</title>
+    <style>
+        body { background: #000; color: #fff; font-family: monospace; display: flex; height: 100vh; margin:0; padding:20px; box-sizing: border-box; gap: 20px;}
+        .vitals { width: 250px; border: 1px solid #444; padding: 15px; }
+        .chat { flex-grow: 1; border: 1px solid #444; padding: 15px; display: flex; flex-direction: column; }
+        #output { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; white-space: pre-wrap; }
+        input { background: #111; border: 1px solid #444; color: #fff; padding: 10px; width: 100%; box-sizing: border-box; font-family: monospace;}
+        .bar { height: 10px; background: #333; margin: 5px 0 15px 0; }
+        .fill { height: 100%; transition: width 0.3s; }
+    </style>
+</head>
+<body>
+    <div class="vitals">
+        <h3>BIOLOGY</h3>
+        Stamina: <span id="v-stam">100</span><div class="bar"><div id="b-stam" class="fill" style="width:100%; background:#0f0;"></div></div>
+        Dopamine: <span id="v-dopa">0.1</span><div class="bar"><div id="b-dopa" class="fill" style="width:10%; background:#f0f;"></div></div>
+        Cortisol: <span id="v-cort">0.1</span><div class="bar"><div id="b-cort" class="fill" style="width:10%; background:#f00;"></div></div>
+        Drag: <span id="v-drag">0.6</span>
+    </div>
+    <div class="chat">
+        <div id="output">System initialized. Awaiting input.</div>
+        <input type="text" id="inp" autofocus>
+    </div>
+    <script>
+        const inp = document.getElementById('inp');
+        const out = document.getElementById('output');
+        inp.addEventListener('keypress', async (e) => {
+            if(e.key === 'Enter' && inp.value) {
+                const text = inp.value; inp.value = '';
+                out.innerHTML += `\n\n> ${text}`;
+                out.scrollTop = out.scrollHeight;
+                const res = await fetch('/api/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:text})});
+                const data = await res.json();
+                out.innerHTML += `\n\n${data.response}`;
+                out.scrollTop = out.scrollHeight;
+                document.getElementById('v-stam').innerText = data.vitals.stamina.toFixed(1);
+                document.getElementById('b-stam').style.width = Math.min(100, data.vitals.stamina) + '%';
+                document.getElementById('v-dopa').innerText = data.vitals.dopamine.toFixed(2);
+                document.getElementById('b-dopa').style.width = (data.vitals.dopamine*100) + '%';
+                document.getElementById('v-cort').innerText = data.vitals.cortisol.toFixed(2);
+                document.getElementById('b-cort').style.width = (data.vitals.cortisol*100) + '%';
+                document.getElementById('v-drag').innerText = data.vitals.drag.toFixed(2);
+            }
+        });
+    </script>
+</body>
+</html>
